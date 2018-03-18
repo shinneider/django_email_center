@@ -9,8 +9,7 @@ The 'Django Email Center' centralizes all email sending
   
     pip install git+ssh://github.com/shinneider/django_email_center.git#egg=django-email-center
 
-Usage  
------- 
+# Usage
   
 1. Add django application django_email_center to INSTALLED_APPS in settings.py
   
@@ -137,7 +136,7 @@ Usage
         returns:
         True - Sended successful
         False - Error (view in EmailLogError DataBase)
-        None - Email exceeded maximum number of attempts (not try again), for this view "Manual send email, that exceeded the maximum number of attempts"
+        None - Email exceeded maximum number of attempts (not try again), for this see "Manual send email, that exceeded the maximum number of attempts"
 
 3. Manual send email, that exceeded the maximum number of attempts
 
