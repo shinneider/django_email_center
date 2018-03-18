@@ -82,7 +82,7 @@ The 'Django Email Center' centralizes all email sending
 
         attachment = {}
         attachment['filename'] = 'example.jpg'
-        attachment['content'] = File(open('var\www\example.jpg', 'rb'))
+        attachment['content'] = File(open('/var/www/example.jpg', 'rb'))
         ...
         email.send_email('testfrom@example.com', 'testto@example.com', 'subject here', 'body here',  attachments=attachment)
 
@@ -96,7 +96,7 @@ The 'Django Email Center' centralizes all email sending
 	    for i in range(1,10):
             attachment = {}
             attachment['filename'] = 'example.jpg'
-            attachment['content'] = File(open('var\www\example.jpg', 'rb'))
+            attachment['content'] = File(open('/var/www/example.jpg', 'rb'))
 
             attachments.append(attachment)
         ...
@@ -142,7 +142,18 @@ The 'Django Email Center' centralizes all email sending
         True - if sended successful
         False - if error (view in EmailLogError DataBase)
 
-4. Interact over Django Email Center Models
+4. Update max retry exceeded for all not sended email
+
+        from django_email_center.views.email_center import EmailCenter
+	    ...
+
+	    email = EmailCenter()
+	    email.update_exceeded_max_retry()
+
+	    **returns:**
+        True - if sended successful
+
+5. Interact over Django Email Center Models
 
         from django_email_center.models import *
         ...

@@ -37,8 +37,6 @@ class EmailCenter(object):
 
         if hasattr(Settings, 'EMAIL_CENTER_ASYNCHRONOUS_SEND_EMAIL'):
             asynchronous = Settings.EMAIL_CENTER_ASYNCHRONOUS_SEND_EMAIL
-        else:
-            asynchronous = asynchronous
 
         if asynchronous:
             t = threading.Thread(target=self.call_function,
@@ -62,8 +60,6 @@ class EmailCenter(object):
 
         if hasattr(Settings, 'EMAIL_CENTER_NO_SEND_EMAIL'):
             no_send_email = Settings.EMAIL_CENTER_NO_SEND_EMAIL
-        else:
-            no_send_email = no_send_email
 
         if not no_send_email:
             self.send_email_function(email_log)
@@ -174,7 +170,7 @@ class EmailCenter(object):
         return True
 
     @staticmethod
-    def update_max_retry():
+    def update_exceeded_max_retry():
         max_retry = Settings.EMAIL_CENTER_MAX_RETRY if hasattr(Settings, 'EMAIL_CENTER_MAX_RETRY') else 5
 
         for email in EmailLog.objects.filter(sended=False):
