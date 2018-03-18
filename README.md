@@ -122,7 +122,7 @@ The 'Django Email Center' centralizes all email sending
 	    email.send_email_function(EmailLogObjectHere)
 
 
-        returns:
+        **returns:**
         True - Sended successful
         False - Error (view in EmailLogError DataBase)
         None - Email exceeded maximum number of attempts (not try again), for this see "Manual send email, that exceeded the maximum number of attempts"
@@ -137,9 +137,9 @@ The 'Django Email Center' centralizes all email sending
 
 
 
-        returns:
-        True - Sended successful
-        False - Error (view in EmailLogError DataBase)
+        **returns:**
+        True - if sended successful
+        False - if error (view in EmailLogError DataBase)
 
 4. Interact over Django Email Center Models
 
@@ -153,12 +153,12 @@ The 'Django Email Center' centralizes all email sending
 
 # Uninstall Django Email Center
 
-        in shell:
+    **in shell:**
         python manage.py migrate --fake django_email_center zero
         pip uninstall django-email-center
 
 
-        in database:
+    **in database:**
         DROP TABLE django_email_center_emaillog;
         DROP TABLE django_email_center_emaillogattachment;
         DROP TABLE django_email_center_emaillogerro;
