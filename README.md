@@ -87,7 +87,7 @@ Usage
         ...
         email.send_email('testefrom@example.com', 'testeto@example.com', 'subject here', 'body here',  attachments=attachment)
   
-9. Send a email with one attachment
+9. Send a email with multiple attachments
 
         from django_email_center.views.email_center import EmailCenter
 	    ...
