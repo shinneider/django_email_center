@@ -7,7 +7,7 @@ The 'Django Email Center' centralizes all email sending
   
 # Install  
   
-    pip install git+https://github.com/shinneider/django_email_center.git#egg=django-email-center
+    pip install django-email-center
 
 # Usage
   
