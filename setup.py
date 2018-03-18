@@ -4,7 +4,7 @@ from io import open
 
 from setuptools import find_packages, setup
 
-from django_history.meta import VERSION
+from django_email_center.meta import VERSION
 
 setup(
     name='django-email-center',
