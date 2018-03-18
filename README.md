@@ -108,7 +108,7 @@ Usage
 1. Optionals settings configuration
 
 	    EMAIL_CENTER_NO_SEND_EMAIL = False  # (Default: False) if true, all email(s) are stored but no sended
-        EMAIL_CENTER_MAX_RETRY = 5  # (Default: 5) maximum number of attempts to send email(s)
+        EMAIL_CENTER_MAX_RETRY = 5  # (Default: 5) maximum number of attempts to send email(s) (Obs: in the future, I will create a job, for automatic retry, currently retry is manual, see "Manual send email")
         EMAIL_CENTER_ATTACHMENT_PATH = 'email_center/attachment/'  # (Default: 'email_center/attachment/') place where the attachments are stored
         EMAIL_CENTER_ASYNCHRONOUS_SEND_EMAIL = False  # (Default: False) if true, all email(s) are sended in asynchronous method
 
@@ -117,6 +117,7 @@ Usage
         in shell:
         python manage.py migrate --fake django_email_center zero
         pip uninstall django-email-center
+
 
         in database:
         DROP TABLE django_email_center_emaillog;
@@ -131,6 +132,26 @@ Usage
 
 	    email = EmailCenter()
 	    email.send_email_function(EmailLogObjectHere)
+
+
+        returns:
+        True - Sended successful
+        False - Error (view in EmailLogError DataBase)
+        None - Email exceeded maximum number of attempts (not try again), for this view "Manual send email, that exceeded the maximum number of attempts"
+
+3. Manual send email, that exceeded the maximum number of attempts
+
+        from django_email_center.views.email_center import EmailCenter
+	    ...
+
+	    email = EmailCenter()
+	    email.send_email_function(EmailLogObjectHere, force_send=True)
+
+
+
+        returns:
+        True - Sended successful
+        False - Error (view in EmailLogError DataBase)
 
 4. Interact over Django Email Center Models
 
