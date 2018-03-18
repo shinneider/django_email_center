@@ -104,12 +104,14 @@ The 'Django Email Center' centralizes all email sending
 
 # Others features  
   
-1. Optionals settings configuration
+1. Optionals settings configuration (in settings.py)
 
+	    ...
 	    EMAIL_CENTER_NO_SEND_EMAIL = False  # (Default: False) if true, all email(s) are stored but no sended
         EMAIL_CENTER_MAX_RETRY = 5  # (Default: 5) maximum number of attempts to send email(s) (Obs: in the future, I will create a job, for automatic retry, currently retry is manual, see "Manual send email")
         EMAIL_CENTER_ATTACHMENT_PATH = 'email_center/attachment/'  # (Default: 'email_center/attachment/') place where the attachments are stored
         EMAIL_CENTER_ASYNCHRONOUS_SEND_EMAIL = False  # (Default: False) if true, all email(s) are sended in asynchronous method
+        ...
 
 2. Uninstall Django Email Center
 
