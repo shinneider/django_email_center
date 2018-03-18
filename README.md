@@ -26,7 +26,7 @@ The 'Django Email Center' centralizes all email sending
 	    ...  
 
 	    email = EmailCenter()
-        email.send_email('testefrom@example.com', 'testeto@example.com', 'subject here', 'body here' )
+        email.send_email('testfrom@example.com', 'testto@example.com', 'subject here', 'body here' )
         ...
 
 3. Send a simple email for several
@@ -35,7 +35,7 @@ The 'Django Email Center' centralizes all email sending
 	    ...
 
 	    email = EmailCenter()
-        email.send_email('testefrom@example.com', ['testeto1@example.com', 'testeto2@example.com'], 'subject here', 'body here' )
+        email.send_email('testfrom@example.com', ['testto1@example.com', 'testto2@example.com'], 'subject here', 'body here' )
         ...
 
 4. Send a simple email for several in hidden copy
@@ -44,7 +44,7 @@ The 'Django Email Center' centralizes all email sending
 	    ...
 
 	    email = EmailCenter()
-        email.send_email('testefrom@example.com', ['testeto1@example.com', 'testeto2@example.com'], 'subject here', 'body here', hidden_copy=True )
+        email.send_email('testfrom@example.com', ['testto1@example.com', 'testto2@example.com'], 'subject here', 'body here', hidden_copy=True )
         ...
 
 5. Send a simple email in asynchronous method
@@ -53,7 +53,7 @@ The 'Django Email Center' centralizes all email sending
 	    ...
 
 	    email = EmailCenter()
-        email.send_email('testefrom@example.com', 'testeto@example.com', 'subject here', 'body here' asynchronous=True)
+        email.send_email('testfrom@example.com', 'testto@example.com', 'subject here', 'body here' asynchronous=True)
         ...
 
 6. Save but not send a simple email
@@ -62,17 +62,17 @@ The 'Django Email Center' centralizes all email sending
 	    ...
 
 	    email = EmailCenter()
-        email.send_email('testefrom@example.com', 'testeto@example.com', 'subject here', 'body here' no_send_email=True)
+        email.send_email('testfrom@example.com', 'testto@example.com', 'subject here', 'body here' no_send_email=True)
         ...
 
 7. Send a email with html body
-  
+
 	    from django_email_center.views.email_center import EmailCenter
 	    ...
 
 	    body = render_to_string('html_template_here', parameters)
 	    email = EmailCenter()
-        email.send_email('testefrom@example.com', 'testeto@example.com', 'subject here', body, content_html=True )
+        email.send_email('testfrom@example.com', 'testto@example.com', 'subject here', body, content_html=True )
         ...
 
 8. Send a email with one attachment
@@ -84,8 +84,8 @@ The 'Django Email Center' centralizes all email sending
         attachment['filename'] = 'example.jpg'
         attachment['content'] = File(open('var\www\example.jpg', 'rb'))
         ...
-        email.send_email('testefrom@example.com', 'testeto@example.com', 'subject here', 'body here',  attachments=attachment)
-  
+        email.send_email('testfrom@example.com', 'testto@example.com', 'subject here', 'body here',  attachments=attachment)
+
 9. Send a email with multiple attachments
 
         from django_email_center.views.email_center import EmailCenter
@@ -100,10 +100,10 @@ The 'Django Email Center' centralizes all email sending
 
             attachments.append(attachment)
         ...
-        email.send_email('testefrom@example.com', 'testeto@example.com', 'subject here', 'body here',  attachments=attachment)
+        email.send_email('testfrom@example.com', 'testto@example.com', 'subject here', 'body here',  attachments=attachment)
 
-# Others features  
-  
+# Others features
+
 1. Optionals settings configuration (in settings.py)
 
 	    ...
@@ -111,6 +111,7 @@ The 'Django Email Center' centralizes all email sending
         EMAIL_CENTER_MAX_RETRY = 5  # (Default: 5) maximum number of attempts to send email(s) (Obs: in the future, I will create a job, for automatic retry, currently retry is manual, see "Manual send email")
         EMAIL_CENTER_ATTACHMENT_PATH = 'email_center/attachment/'  # (Default: 'email_center/attachment/') place where the attachments are stored
         EMAIL_CENTER_ASYNCHRONOUS_SEND_EMAIL = False  # (Default: False) if true, all email(s) are sended in asynchronous method
+        EMAIL_CENTER_DJANGO_ADMIN_REGISTER = True  # if true, models are registered in Django Admin
         ...
 
 2. Manual send email
