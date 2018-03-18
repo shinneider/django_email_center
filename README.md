@@ -113,20 +113,7 @@ The 'Django Email Center' centralizes all email sending
         EMAIL_CENTER_ASYNCHRONOUS_SEND_EMAIL = False  # (Default: False) if true, all email(s) are sended in asynchronous method
         ...
 
-2. Uninstall Django Email Center
-
-        in shell:
-        python manage.py migrate --fake django_email_center zero
-        pip uninstall django-email-center
-
-
-        in database:
-        DROP TABLE django_email_center_emaillog;
-        DROP TABLE django_email_center_emaillogattachment;
-        DROP TABLE django_email_center_emaillogerro;
-        DROP TABLE django_email_center_emailstatisticdate;
-
-3. Manual send email
+2. Manual send email
 
         from django_email_center.views.email_center import EmailCenter
 	    ...
@@ -163,3 +150,16 @@ The 'Django Email Center' centralizes all email sending
         variable_name = EmailLogAttachment.objects.all()  # Email(s) attachments
         variable_name = EmailLogErro.objects.all()  # If the submission generates an error, it will be saved here.
         variable_name = EmailStatisticDate.objects.all()  # Statistics of email(s), sended, failed and registered by date
+
+# Uninstall Django Email Center
+
+        in shell:
+        python manage.py migrate --fake django_email_center zero
+        pip uninstall django-email-center
+
+
+        in database:
+        DROP TABLE django_email_center_emaillog;
+        DROP TABLE django_email_center_emaillogattachment;
+        DROP TABLE django_email_center_emaillogerro;
+        DROP TABLE django_email_center_emailstatisticdate;
