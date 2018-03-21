@@ -22,7 +22,7 @@ class EmailCenter(object):
         if isinstance(email_to, str):
             email_to = [email_to, ]
         elif not isinstance(email_to, list):
-            raise Exception(_("Email to, need a single or list of string(s) email(s)"))
+            raise Exception(_('the parameter "email_to", need a single or list of string(s) email(s)'))
 
         if attachments is not None:
             if not isinstance(attachments, list):
@@ -30,25 +30,27 @@ class EmailCenter(object):
 
             for attachment in attachments:
                 if not isinstance(attachment, dict):
-                    raise Exception(_('Attachment is not valid, expected a dict containing filename and content'))
+                    raise Exception(
+                        _('the parameter "attachment", is not valid, expected a dict containing filename and content'))
 
                 if 'filename' not in attachment or 'content' not in attachment:
-                    raise Exception(_('Attachment is not valid, expected a dict containing filename and content'))
+                    raise Exception(
+                        _('the parameter "attachment", is not valid, expected a dict containing filename and content'))
 
         if hasattr(Settings, 'EMAIL_CENTER_ASYNCHRONOUS_SEND_EMAIL'):
             asynchronous = Settings.EMAIL_CENTER_ASYNCHRONOUS_SEND_EMAIL
 
         if asynchronous:
-            t = threading.Thread(target=self.call_function,
+            t = threading.Thread(target=self._call_function,
                                  args=(email_from, email_to, subject, content, content_html, attachments,
                                        hidden_copy, no_send_email))
             t.start()
 
         else:
-            self.call_function(email_from, email_to, subject, content, content_html, attachments,
+            self._call_function(email_from, email_to, subject, content, content_html, attachments,
                                hidden_copy, no_send_email)
 
-    def call_function(self, email_from, email_to, subject, content, content_html=False,
+    def _call_function(self, email_from, email_to, subject, content, content_html=False,
                       attachments=False, hidden_copy=False, no_send_email=False):
 
         # save email in database
@@ -99,7 +101,7 @@ class EmailCenter(object):
                 return True
 
             except Exception as e:
-                self.update_retry_quantity(email_log.pk)
+                self._update_retry_quantity(email_log.pk)
 
                 # generate statistic by date
                 self.update_statistic_date('failed')
@@ -149,7 +151,7 @@ class EmailCenter(object):
         return email
 
     @staticmethod
-    def update_retry_quantity(email_pk):
+    def _update_retry_quantity(email_pk):
         max_retry = Settings.EMAIL_CENTER_MAX_RETRY if hasattr(Settings, 'EMAIL_CENTER_MAX_RETRY') else 5
 
         email = EmailLog.objects.filter(pk=email_pk).first()
@@ -165,7 +167,7 @@ class EmailCenter(object):
             email.save()
 
         else:
-            raise Exception(_("This email with pk {pk} don't exists").format(pk=email_pk))
+            raise Exception(_("email with pk {pk} don't exists").format(pk=email_pk))
 
         return True
 
@@ -183,6 +185,12 @@ class EmailCenter(object):
             email.save()
 
         return True
+
+    @staticmethod
+    def get_not_sended_emails(exceeded_max_retry=False):
+        emails = EmailLog.objects.filter(sended=False, exceeded_max_retry=exceeded_max_retry)
+
+        return emails
 
     @staticmethod
     def update_statistic_date(status):

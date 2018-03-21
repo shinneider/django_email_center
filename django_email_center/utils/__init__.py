@@ -1,5 +1,6 @@
 from django.conf import Settings
 
+
 def ATTACHMENT_DIRECTORY_PATH(instance, filename):
 
     if hasattr(Settings, 'EMAIL_CENTER_ATTACHMENT_PATH'):

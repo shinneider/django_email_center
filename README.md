@@ -108,7 +108,7 @@ The 'Django Email Center' centralizes all email sending
 
 	    ...
 	    EMAIL_CENTER_NO_SEND_EMAIL = False  # (Default: False) if true, all email(s) are stored but no sended
-        EMAIL_CENTER_MAX_RETRY = 5  # (Default: 5) maximum number of attempts to send email(s) (Obs: in the future, I will create a job, for automatic retry, currently retry is manual, see "Manual send email")
+        EMAIL_CENTER_MAX_RETRY = 5  # (Default: 5) maximum number of attempts to send email(s) (Obs: in the future, I will create a job, for automatic retry, currently retry is manual, see "Manual send email" or "Function for automatic send emails not sended")
         EMAIL_CENTER_ATTACHMENT_PATH = 'email_center/attachment/'  # (Default: 'email_center/attachment/') place where the attachments are stored
         EMAIL_CENTER_ASYNCHRONOUS_SEND_EMAIL = False  # (Default: False) if true, all email(s) are sended in asynchronous method
         EMAIL_CENTER_DJANGO_ADMIN_REGISTER = True  # if true, models are registered in Django Admin
@@ -137,12 +137,25 @@ The 'Django Email Center' centralizes all email sending
 	    email.send_email_function(EmailLogObjectHere, force_send=True)
 
 
-
         **returns:**
         True - if sended successful
         False - if error (view in EmailLogError DataBase)
 
-4. Update max retry exceeded for all not sended email
+4. Function for automatic send emails not sended
+
+        from django_email_center.utils import actions
+	    ...
+
+        actions.send_emails_not_sended()
+
+5. Function for automatic send emails not sended, that exceeded the maximum number of attempts
+
+        from django_email_center.utils import actions
+	    ...
+
+        actions.send_emails_not_sended(exceeded_max_retry=True)
+
+6. Update max retry exceeded for all not sended email
 
         from django_email_center.views.email_center import EmailCenter
 	    ...
@@ -153,7 +166,7 @@ The 'Django Email Center' centralizes all email sending
 	    **returns:**
         True - if sended successful
 
-5. Interact over Django Email Center Models
+7. Interact over Django Email Center Models
 
         from django_email_center.models import *
         ...
@@ -166,12 +179,12 @@ The 'Django Email Center' centralizes all email sending
 # Uninstall Django Email Center
 
     **in shell:**
-        python manage.py migrate --fake django_email_center zero
-        pip uninstall django-email-center
+    python manage.py migrate --fake django_email_center zero
+    pip uninstall django-email-center
 
 
     **in database:**
-        DROP TABLE django_email_center_emaillog;
-        DROP TABLE django_email_center_emaillogattachment;
-        DROP TABLE django_email_center_emaillogerro;
-        DROP TABLE django_email_center_emailstatisticdate;
+    DROP TABLE django_email_center_emaillog;
+    DROP TABLE django_email_center_emaillogattachment;
+    DROP TABLE django_email_center_emaillogerro;
+    DROP TABLE django_email_center_emailstatisticdate;
