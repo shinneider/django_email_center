@@ -19,7 +19,7 @@ from django_email_center.utils import actions
 class EmailCenter(object):
 
     def send_email(self, email_from, email_to, subject, content, content_html=False,
-                   attachments=None, hidden_copy=False, asynchronous=False, 
+                   attachments=None, hidden_copy=False, asynchronous=None, 
                    send_email=True):
 
         email = generics.validate_destination_email(email_to)
@@ -30,8 +30,8 @@ class EmailCenter(object):
         if not attachment[0]:
             raise Exception(email[1])
 
-        if not asynchronous:
-            asynchronous = getattr(Settings, 'EMAIL_CENTER_ASYNCHRONOUS_SEND_EMAIL', asynchronous)
+        if asynchronous is None:
+            asynchronous = getattr(Settings, 'EMAIL_CENTER_ASYNCHRONOUS_SEND_EMAIL', False)
 
         if asynchronous:
             t = threading.Thread(
@@ -47,7 +47,7 @@ class EmailCenter(object):
                                 attachments, hidden_copy, send_email)
 
     def _call_function(self, email_from, email_to, subject, content, content_html=False,
-                       attachments=False, hidden_copy=False, send_email=False):
+                       attachments=False, hidden_copy=False, send_email=None):
 
         # save email in database
         email_log = self.save_email(email_from, email_to, subject, content, content_html, 
@@ -56,10 +56,10 @@ class EmailCenter(object):
         # generate statistic by date
         self._update_statistic_date('registered')
 
-        if hasattr(Settings, 'EMAIL_CENTER_SEND_EMAIL'):
-            send_email = Settings.EMAIL_CENTER_SEND_EMAIL
+        if send_email is None:
+            send_email = getattr(Settings, 'EMAIL_CENTER_SEND_EMAIL', True)
 
-        if not send_email:
+        if send_email:
             self.send_email_function(email_log)
 
     def send_email_function(self, email_log, force_send=False):

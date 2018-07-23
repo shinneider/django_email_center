@@ -15,7 +15,7 @@ def validate_destination_email(email_to):
                 validate_email(email)
             except validate_email.ValidationError:
                 erro = _('the parameter "email_to", is not single or list of valid(s) email(s)').capitalize()
-
+                return [False, erro]
     else: 
         erro = _('the parameter "email_to", need a single or list of string(s) email(s)').capitalize()
         return [False, erro]
@@ -34,6 +34,7 @@ def validate_attachments(attachments):
 
             if 'filename' not in attachment or 'content' not in attachment:
                 erro = _('the parameter "attachments", it\'s not a single or list of dict(s), containing "filename" and "content"').capitalize()
+                return [False, erro]
 
     else:
         erro = _('the parameter "attachments", need a single or list of dict(s), containing "filename" and "content"').capitalize()
