@@ -12,58 +12,54 @@ from django.utils.html import urlize
 from django.utils.translation import ugettext as _
 
 from django_email_center.models.Email import EmailLog, EmailLogAttachment, EmailStatisticDate, EmailLogError
+from django_email_center.utils import generics
+from django_email_center.utils import actions
 
 
 class EmailCenter(object):
 
     def send_email(self, email_from, email_to, subject, content, content_html=False,
-                   attachments=None, hidden_copy=False, asynchronous=False, no_send_email=False):
+                   attachments=None, hidden_copy=False, asynchronous=False, 
+                   send_email=True):
 
-        if isinstance(email_to, str):
-            email_to = [email_to, ]
-        elif not isinstance(email_to, list):
-            raise Exception(_('the parameter "email_to", need a single or list of string(s) email(s)'))
+        email = generics.validate_destination_email(email_to)
+        if not email[0]:
+            raise Exception(email[1])
 
-        if attachments is not None:
-            if not isinstance(attachments, list):
-                attachments = [attachments, ]
+        attachment = generics.validate_attachments(attachments)
+        if not attachment[0]:
+            raise Exception(email[1])
 
-            for attachment in attachments:
-                if not isinstance(attachment, dict):
-                    raise Exception(
-                        _('the parameter "attachment", is not valid, expected a dict containing filename and content'))
-
-                if 'filename' not in attachment or 'content' not in attachment:
-                    raise Exception(
-                        _('the parameter "attachment", is not valid, expected a dict containing filename and content'))
-
-        if hasattr(Settings, 'EMAIL_CENTER_ASYNCHRONOUS_SEND_EMAIL'):
-            asynchronous = Settings.EMAIL_CENTER_ASYNCHRONOUS_SEND_EMAIL
+        if not asynchronous:
+            asynchronous = getattr(Settings, 'EMAIL_CENTER_ASYNCHRONOUS_SEND_EMAIL', asynchronous)
 
         if asynchronous:
-            t = threading.Thread(target=self._call_function,
-                                 args=(email_from, email_to, subject, content, content_html, attachments,
-                                       hidden_copy, no_send_email))
+            t = threading.Thread(
+                target=self._call_function,
+                args=(email_from, email_to, subject, content, content_html, attachments,
+                      hidden_copy, send_email)
+            )
+
             t.start()
 
         else:
-            self._call_function(email_from, email_to, subject, content, content_html, attachments,
-                               hidden_copy, no_send_email)
+            self._call_function(email_from, email_to, subject, content, content_html, 
+                                attachments, hidden_copy, send_email)
 
     def _call_function(self, email_from, email_to, subject, content, content_html=False,
-                      attachments=False, hidden_copy=False, no_send_email=False):
+                       attachments=False, hidden_copy=False, send_email=False):
 
         # save email in database
-        email_log = self.save_email(email_from, email_to, subject, content, content_html, attachments,
-                                    hidden_copy)
+        email_log = self.save_email(email_from, email_to, subject, content, content_html, 
+                                    attachments, hidden_copy)
 
         # generate statistic by date
         self.update_statistic_date('registered')
 
-        if hasattr(Settings, 'EMAIL_CENTER_NO_SEND_EMAIL'):
-            no_send_email = Settings.EMAIL_CENTER_NO_SEND_EMAIL
+        if hasattr(Settings, 'EMAIL_CENTER_SEND_EMAIL'):
+            send_email = Settings.EMAIL_CENTER_SEND_EMAIL
 
-        if not no_send_email:
+        if not send_email:
             self.send_email_function(email_log)
 
     def send_email_function(self, email_log, force_send=False):
@@ -101,7 +97,7 @@ class EmailCenter(object):
                 return True
 
             except Exception as e:
-                self._update_retry_quantity(email_log.pk)
+                actions.update_retry_quantity(email_log.pk)
 
                 # generate statistic by date
                 self.update_statistic_date('failed')
@@ -149,48 +145,6 @@ class EmailCenter(object):
             email.save()
 
         return email
-
-    @staticmethod
-    def _update_retry_quantity(email_pk):
-        max_retry = Settings.EMAIL_CENTER_MAX_RETRY if hasattr(Settings, 'EMAIL_CENTER_MAX_RETRY') else 5
-
-        email = EmailLog.objects.filter(pk=email_pk).first()
-
-        if email is not None:
-            email.error_quantity += 1
-
-            if email.error_quantity > max_retry:
-                email.exceeded_max_retry = True
-            else:
-                email.exceeded_max_retry = False
-
-            email.save()
-
-        else:
-            raise Exception(_("email with pk {pk} don't exists").format(pk=email_pk))
-
-        return True
-
-    @staticmethod
-    def update_exceeded_max_retry():
-        max_retry = Settings.EMAIL_CENTER_MAX_RETRY if hasattr(Settings, 'EMAIL_CENTER_MAX_RETRY') else 5
-
-        for email in EmailLog.objects.filter(sended=False):
-
-            if email.error_quantity > max_retry:
-                email.exceeded_max_retry = True
-            else:
-                email.exceeded_max_retry = False
-
-            email.save()
-
-        return True
-
-    @staticmethod
-    def get_not_sended_emails(exceeded_max_retry=False):
-        emails = EmailLog.objects.filter(sended=False, exceeded_max_retry=exceeded_max_retry)
-
-        return emails
 
     @staticmethod
     def update_statistic_date(status):

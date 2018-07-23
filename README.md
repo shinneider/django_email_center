@@ -13,65 +13,65 @@ The 'Django Email Center' centralizes all email sending
   
 1. Add django application django_email_center to INSTALLED_APPS in settings.py
   
-	    INSTALLED_APPS = [  
-	        ...  
-	        'django_email_center',
-	        ...  
-	    ]  
+        INSTALLED_APPS = [  
+                ...  
+                'django_email_center',
+                ...  
+        ]  
   
 
 2. Send a simple email
   
-	    from django_email_center.views.email_center import EmailCenter
-	    ...  
+        from django_email_center.views.email_center import EmailCenter
+        ...  
 
-	    email = EmailCenter()
+        email = EmailCenter()
         email.send_email('testfrom@example.com', 'testto@example.com', 'subject here', 'body here' )
         ...
 
 3. Send a simple email for several
 
-	    from django_email_center.views.email_center import EmailCenter
-	    ...
+        from django_email_center.views.email_center import EmailCenter
+        ...
 
-	    email = EmailCenter()
+        email = EmailCenter()
         email.send_email('testfrom@example.com', ['testto1@example.com', 'testto2@example.com'], 'subject here', 'body here' )
         ...
 
 4. Send a simple email for several in hidden copy
 
-	    from django_email_center.views.email_center import EmailCenter
-	    ...
+        from django_email_center.views.email_center import EmailCenter
+        ...
 
-	    email = EmailCenter()
+        email = EmailCenter()
         email.send_email('testfrom@example.com', ['testto1@example.com', 'testto2@example.com'], 'subject here', 'body here', hidden_copy=True )
         ...
 
 5. Send a simple email in asynchronous method
 
-	    from django_email_center.views.email_center import EmailCenter
-	    ...
+        from django_email_center.views.email_center import EmailCenter
+        ...
 
-	    email = EmailCenter()
+        email = EmailCenter()
         email.send_email('testfrom@example.com', 'testto@example.com', 'subject here', 'body here' asynchronous=True)
         ...
 
 6. Save but not send a simple email
 
-	    from django_email_center.views.email_center import EmailCenter
-	    ...
+        from django_email_center.views.email_center import EmailCenter
+        ...
 
-	    email = EmailCenter()
-        email.send_email('testfrom@example.com', 'testto@example.com', 'subject here', 'body here' no_send_email=True)
+        email = EmailCenter()
+        email.send_email('testfrom@example.com', 'testto@example.com', 'subject here', 'body here' send_email=True)
         ...
 
 7. Send a email with html body
 
-	    from django_email_center.views.email_center import EmailCenter
-	    ...
+        from django_email_center.views.email_center import EmailCenter
+        ...
 
-	    body = render_to_string('html_template_here', parameters)
-	    email = EmailCenter()
+        body = render_to_string('html_template_here', parameters)
+        email = EmailCenter()
         email.send_email('testfrom@example.com', 'testto@example.com', 'subject here', body, content_html=True )
         ...
 
@@ -89,16 +89,16 @@ The 'Django Email Center' centralizes all email sending
 9. Send a email with multiple attachments
 
         from django_email_center.views.email_center import EmailCenter
-	    ...
+        ...
 
-	    attachments = []
+        attachments = []
 
-	    for i in range(1,10):
-            attachment = {}
-            attachment['filename'] = 'example.jpg'
-            attachment['content'] = File(open('/var/www/example.jpg', 'rb'))
+        for i in range(1,10):
+        attachment = {}
+        attachment['filename'] = 'example.jpg'
+        attachment['content'] = File(open('/var/www/example.jpg', 'rb'))
 
-            attachments.append(attachment)
+        attachments.append(attachment)
         ...
         email.send_email('testfrom@example.com', 'testto@example.com', 'subject here', 'body here',  attachments=attachment)
 
@@ -106,8 +106,8 @@ The 'Django Email Center' centralizes all email sending
 
 1. Optionals settings configuration (in settings.py)
 
-	    ...
-	    EMAIL_CENTER_NO_SEND_EMAIL = False  # (Default: False) if true, all email(s) are stored but no sended
+        ...
+        EMAIL_CENTER_SEND_EMAIL = False  # (Default: False) if true, all email(s) are stored but no sended
         EMAIL_CENTER_MAX_RETRY = 5  # (Default: 5) maximum number of attempts to send email(s) (Obs: in the future, I will create a job, for automatic retry, currently retry is manual, see "Manual send email" or "Function for automatic send emails not sended")
         EMAIL_CENTER_ATTACHMENT_PATH = 'email_center/attachment/'  # (Default: 'email_center/attachment/') place where the attachments are stored
         EMAIL_CENTER_ASYNCHRONOUS_SEND_EMAIL = False  # (Default: False) if true, all email(s) are sended in asynchronous method
@@ -117,10 +117,10 @@ The 'Django Email Center' centralizes all email sending
 2. Manual send email
 
         from django_email_center.views.email_center import EmailCenter
-	    ...
+        ...
 
-	    email = EmailCenter()
-	    email.send_email_function(EmailLogObjectHere)
+        email = EmailCenter()
+        email.send_email_function(EmailLogObjectHere)
 
 
         **returns:**
@@ -131,10 +131,10 @@ The 'Django Email Center' centralizes all email sending
 3. Manual send email, that exceeded the maximum number of attempts
 
         from django_email_center.views.email_center import EmailCenter
-	    ...
+        ...
 
-	    email = EmailCenter()
-	    email.send_email_function(EmailLogObjectHere, force_send=True)
+        email = EmailCenter()
+        email.send_email_function(EmailLogObjectHere, force_send=True)
 
 
         **returns:**
@@ -155,18 +155,37 @@ The 'Django Email Center' centralizes all email sending
 
         actions.send_emails_not_sended(exceeded_max_retry=True)
 
-6. Update max retry exceeded for all not sended email
+6. Update max retry exceeded for all not sended email (settings max_retry)
 
-        from django_email_center.views.email_center import EmailCenter
-	    ...
+        from django_email_center.utils import actions
+        ...
 
-	    email = EmailCenter()
-	    email.update_exceeded_max_retry()
+        actions.update_exceeded_max_retry()
 
-	    **returns:**
+        **returns:**
         True - if sended successful
 
-7. Interact over Django Email Center Models
+8. Update max retry exceeded for all not sended email (manual max_retry) 
+
+        from django_email_center.utils import actions
+        ...
+
+        actions.update_exceeded_max_retry(max_retry=5)
+
+        **returns:**
+        True - if sended successful
+
+9. Update max retry exceeded for all not sended email (passing queryset)
+
+        from django_email_center.utils import actions
+        ...
+
+        actions.update_exceeded_max_retry(queryset=EmailLog.objects.all())
+
+        **returns:**
+        True - if sended successful
+
+10. Interact over Django Email Center Models
 
         from django_email_center.models import *
         ...
