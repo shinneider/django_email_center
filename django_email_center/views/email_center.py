@@ -54,7 +54,7 @@ class EmailCenter(object):
                                     attachments, hidden_copy)
 
         # generate statistic by date
-        self.update_statistic_date('registered')
+        self._update_statistic_date('registered')
 
         if hasattr(Settings, 'EMAIL_CENTER_SEND_EMAIL'):
             send_email = Settings.EMAIL_CENTER_SEND_EMAIL
@@ -63,54 +63,57 @@ class EmailCenter(object):
             self.send_email_function(email_log)
 
     def send_email_function(self, email_log, force_send=False):
+        erro = ''
+        
+        if not force_send and email_log.exceeded_max_retry:
+            erro = _('is not sent because the object has exceeded a number of retries').capitalize()
+            return [None, erro]
 
-        if not email_log.exceeded_max_retry or force_send:
+        try:
+            if email_log.hidden_copy:
+                msg = EmailMultiAlternatives(subject=email_log.subject, body=email_log.body,
+                                                from_email=email_log.email_from, bcc=email_log.email_to)
+            else:
+                msg = EmailMultiAlternatives(subject=email_log.subject, body=email_log.body,
+                                                from_email=email_log.email_from, to=email_log.email_to)
 
-            try:
-                if email_log.hidden_copy:
-                    msg = EmailMultiAlternatives(subject=email_log.subject, body=email_log.body,
-                                                 from_email=email_log.email_from, bcc=email_log.email_to)
-                else:
-                    msg = EmailMultiAlternatives(subject=email_log.subject, body=email_log.body,
-                                                 from_email=email_log.email_from, to=email_log.email_to)
+            if email_log.body_html:
+                msg.attach_alternative(email_log.body, "text/html")
 
-                if email_log.body_html:
-                    msg.attach_alternative(email_log.body, "text/html")
+            attachments = email_log.emaillogattachment_set.all()
 
-                attachments = email_log.emaillogattachment_set.all()
+            if attachments is not None:
 
-                if attachments is not None:
+                for attachment in attachments:
+                    attachment_filename = urlize(os.path.basename(attachment.file.name))
+                    msg.attach(attachment_filename, attachment.file.read())
 
-                    for attachment in attachments:
-                        attachment_filename = urlize(os.path.basename(attachment.file.name))
-                        msg.attach(attachment_filename, attachment.file.read())
+            msg.send()
 
-                msg.send()
+            email_log.sended = True
+            email_log.sended_datetime = timezone.now()
+            email_log.save()
 
-                email_log.sended = True
-                email_log.sended_datetime = timezone.now()
-                email_log.save()
+            # generate statistic by date
+            self._update_statistic_date('sended')
 
-                # generate statistic by date
-                self.update_statistic_date('sended')
+            return [True, erro]
 
-                return True
+        except Exception as e:
+            actions.update_retry_quantity(email_log.pk)
 
-            except Exception as e:
-                actions.update_retry_quantity(email_log.pk)
+            # generate statistic by date
+            self._update_statistic_date('failed')
 
-                # generate statistic by date
-                self.update_statistic_date('failed')
+            # generate log error
+            email_log_erro = EmailLogError()
+            email_log_erro.email_log = email_log
+            email_log_erro.message = e
+            email_log_erro.save()
 
-                # generate log error
-                email_log_erro = EmailLogError()
-                email_log_erro.email_log = email_log
-                email_log_erro.message = e
-                email_log_erro.save()
+            erro = e 
+            return [False, erro]
 
-                return False
-
-        return None
 
     @staticmethod
     def save_email(email_from, email_to, subject, content, content_html=False,
@@ -147,7 +150,7 @@ class EmailCenter(object):
         return email
 
     @staticmethod
-    def update_statistic_date(status):
+    def _update_statistic_date(status):
         date = timezone.now().date()
 
         statistic = EmailStatisticDate.objects.filter(date=date, status=status).first()
