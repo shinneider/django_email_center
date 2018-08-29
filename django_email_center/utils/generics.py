@@ -20,7 +20,7 @@ def validate_destination_email(email_to):
         erro = _('the parameter "email_to", need a single or list of string(s) email(s)').capitalize()
         return [False, erro]
 
-    return [True, erro]
+    return [True, erro, email_to]
 
 
 def validate_attachments(attachments):
@@ -40,4 +40,4 @@ def validate_attachments(attachments):
         erro = _('the parameter "attachments", need a single or list of dict(s), containing "filename" and "content"').capitalize()
         return [False, erro]
     
-    return [True, erro]
+    return [True, erro, attachments]

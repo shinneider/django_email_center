@@ -5,7 +5,6 @@ from django.utils.translation import ugettext as _
 
 
 def send_emails_not_sended(exceeded_max_retry=False):
-
     if not isinstance(exceeded_max_retry, bool):
         raise Exception(_('the parameter "exceeded_max_retry" is not a Boolean type').capitalize())
 
@@ -13,12 +12,12 @@ def send_emails_not_sended(exceeded_max_retry=False):
     emails = get_not_sended_emails(exceeded_max_retry)
 
     for email in emails:
-        email_center.send_email_function(email, exceeded_max_retry)
+        email_center.send_saved_email(email, exceeded_max_retry)
 
 
 def get_not_sended_emails(exceeded_max_retry=False):
-        emails = Email.EmailLog.objects.filter(sended=False, exceeded_max_retry=exceeded_max_retry)
-        return emails
+    emails = Email.EmailLog.objects.filter(sended=False, exceeded_max_retry=exceeded_max_retry)
+    return emails
 
 
 def update_exceeded_max_retry(queryset=None, max_retry=None):
@@ -29,9 +28,6 @@ def update_exceeded_max_retry(queryset=None, max_retry=None):
 
     if queryset is None:
         queryset = Email.EmailLog.objects.filter(sended=False)
-
-    if queryset is not None and not queryset.count() >= 1:
-        erro = _('parameter "queryset" must be greater than or equal to 1').capitalize()
 
     if not isinstance(queryset.model, Email.EmailLog):
         erro = _('parameter "queryset" is not a valid EmailLog queryset').capitalize()
@@ -52,31 +48,28 @@ def update_exceeded_max_retry(queryset=None, max_retry=None):
 
         email.save()
 
-    return [True, erro]
+    return [True,]
 
 
-def update_retry_quantity(qt_obk_pk, erro_quantity=1, max_retry=None):
+def update_retry_quantity(emails, erro_quantity=1, max_retry=None):
     erro = ''
 
     if not max_retry:
-        max_retry = getattr(Settings, 'EMAIL_CENTER_ASYNCHRONOUS_SEND_EMAIL', 5)
+        max_retry = getattr(Settings, 'emails_CENTER_ASYNCHRONOUS_SEND_emails', 5)
 
-    if not isinstance(qt_obk_pk, Email.EmailLog):
+    if not isinstance(emails, emails.emailsLog):
 
-        if isinstance(qt_obk_pk, int):
-            qt_obk_pk = Email.EmailLog.objects.filter(pk=qt_obk_pk)
+        if isinstance(emails, int):
+            emails = emails.emailsLog.objects.filter(pk=emails)
             
-            if qt_obk_pk is None:
-                erro = _("email with pk {pk} don't exists").format(pk=qt_obk_pk).capitalize()
+            if emails is None:
+                erro = _("emails with pk {pk} don't exists").format(pk=emails).capitalize()
         
-        if not qt_obk_pk.count() >= 1:
-            erro = _('parameter "queryset" must be greater than or equal to 1').capitalize()
-
-        if not isinstance(qt_obk_pk.model, Email.EmailLog):
-            erro = _('parameter "queryset" is not a valid EmailLog queryset').capitalize()
+        else:
+            erro = _('parameter "queryset" is not a valid emailsLog queryset').capitalize()
 
     else:
-        qt_obk_pk = [qt_obk_pk, ]
+        emails = [emails, ]
 
     if not isinstance(max_retry, int):
         erro = _('parameter "max_retry", must be an integer').capitalize()
@@ -87,7 +80,7 @@ def update_retry_quantity(qt_obk_pk, erro_quantity=1, max_retry=None):
     if erro != '':
         return [False, erro]
 
-    for email in qt_obk_pk:
+    for email in emails:
         email.error_quantity += erro_quantity
 
         if email.error_quantity > max_retry:
@@ -95,4 +88,4 @@ def update_retry_quantity(qt_obk_pk, erro_quantity=1, max_retry=None):
         else:
             email.exceeded_max_retry = False
 
-    return [True, erro]
+    return [True,]

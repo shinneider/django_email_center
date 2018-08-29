@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import threading
-
 import os
 
 from django.core.files import File
@@ -12,75 +11,73 @@ from django.utils.html import urlize
 from django.utils.translation import ugettext as _
 
 from django_email_center.models.Email import EmailLog, EmailLogAttachment, EmailStatisticDate, EmailLogError
-from django_email_center.utils import generics
-from django_email_center.utils import actions
+from django_email_center import utils as u
 
 
 class EmailCenter(object):
 
-    def send_email(self, email_from, email_to, subject, content, content_html=False,
-                   attachments=None, hidden_copy=False, asynchronous=None, 
-                   send_email=True):
+    def __init__(self, **kwargs):
 
-        email = generics.validate_destination_email(email_to)
-        if not email[0]:
-            raise Exception(email[1])
+        self._email_log = kwargs.get('email_log', None)
 
-        attachment = generics.validate_attachments(attachments)
-        if not attachment[0]:
-            raise Exception(email[1])
+        values = self._email_log.__dict__ if self._email_log else kwargs
 
-        if asynchronous is None:
-            asynchronous = getattr(Settings, 'EMAIL_CENTER_ASYNCHRONOUS_SEND_EMAIL', False)
+        self._email_from = values['email_from']
+        self._email_to = values['email_to']
+        self._subject = values['subject']
+        self._content = values['content']
+        self._content_html = values['content_html']
+        self._attachments = values['attachments']
+        self._hidden_copy = values['hidden_copy']
+        self._asynchronous = values.get('asynchronous', None)
+        
+        self._validate_fields()
 
-        if asynchronous:
-            t = threading.Thread(
-                target=self._call_function,
-                args=(email_from, email_to, subject, content, content_html, attachments,
-                      hidden_copy, send_email)
-            )
+    def _validate_fields(self):
+        # email
+        email = u.generics.validate_destination_email(self._email_to)
+        self._email_to= email[2] if email[0] else raise Exception(email[1])
 
-            t.start()
+        # attachment
+        attachment = u.generics.validate_attachments(self._attachments)
+        self._attachments = attachment[2] if attachment[0] else raise Exception(attachment[1])
+        
+        # asynchronous
+        if self._asynchronous is None:
+            self._asynchronous = getattr(Settings, 'EMAIL_CENTER_ASYNCHRONOUS_SEND_EMAIL', False)
 
-        else:
-            self._call_function(email_from, email_to, subject, content, content_html, 
-                                attachments, hidden_copy, send_email)
-
-    def _call_function(self, email_from, email_to, subject, content, content_html=False,
-                       attachments=False, hidden_copy=False, send_email=None):
-
+    def _call_function(self):
         # save email in database
-        email_log = self.save_email(email_from, email_to, subject, content, content_html, 
-                                    attachments, hidden_copy)
+        self.save_email()
 
         # generate statistic by date
         self._update_statistic_date('registered')
 
-        if send_email is None:
-            send_email = getattr(Settings, 'EMAIL_CENTER_SEND_EMAIL', True)
+        self.send_saved_email()
 
-        if send_email:
-            self.send_email_function(email_log)
+    def send_email(self):
+        if self._asynchronous:
+            threading.Thread(target=self._call_function).start()
+        else:
+            self._call_function()
 
-    def send_email_function(self, email_log, force_send=False):
-        erro = ''
+    def send_saved_email(self, force_send=False):
+
+        if not force_send and self._email_log.exceeded_max_retry:
+            return [None, _('is not sent because the object has exceeded a number of retries').capitalize()]
         
-        if not force_send and email_log.exceeded_max_retry:
-            erro = _('is not sent because the object has exceeded a number of retries').capitalize()
-            return [None, erro]
-
         try:
-            if email_log.hidden_copy:
-                msg = EmailMultiAlternatives(subject=email_log.subject, body=email_log.body,
-                                                from_email=email_log.email_from, bcc=email_log.email_to)
+            if self._email_log.hidden_copy:
+                msg = EmailMultiAlternatives(subject=self._email_log.subject, body=self._email_log.body,
+                                                from_email=self._email_log.email_from, bcc=self._email_log.email_to)
             else:
-                msg = EmailMultiAlternatives(subject=email_log.subject, body=email_log.body,
-                                                from_email=email_log.email_from, to=email_log.email_to)
+                msg = EmailMultiAlternatives(subject=self._email_log.subject, body=self._email_log.body,
+                                                from_email=self._email_log.email_from, to=self._email_log.email_to)
 
-            if email_log.body_html:
-                msg.attach_alternative(email_log.body, "text/html")
+            if self._email_log.body_html:
+                msg.attach_alternative(self._email_log.body, "text/html")
 
-            attachments = email_log.emaillogattachment_set.all()
+            attachments = self._email_log.emaillogattachment_set.all()
 
             if attachments is not None:
 
@@ -90,9 +87,9 @@ class EmailCenter(object):
 
             msg.send()
 
-            email_log.sended = True
-            email_log.sended_datetime = timezone.now()
-            email_log.save()
+            self._email_log.sended = True
+            self._email_log.sended_datetime = timezone.now()
+            self._email_log.save()
 
             # generate statistic by date
             self._update_statistic_date('sended')
@@ -100,14 +97,14 @@ class EmailCenter(object):
             return [True, erro]
 
         except Exception as e:
-            actions.update_retry_quantity(email_log.pk)
+            u.actions.update_retry_quantity(self._email_log.pk)
 
             # generate statistic by date
             self._update_statistic_date('failed')
 
             # generate log error
             email_log_erro = EmailLogError()
-            email_log_erro.email_log = email_log
+            email_log_erro.email_log = self._email_log
             email_log_erro.message = e
             email_log_erro.save()
 
@@ -115,27 +112,24 @@ class EmailCenter(object):
             return [False, erro]
 
 
-    @staticmethod
-    def save_email(email_from, email_to, subject, content, content_html=False,
-                   attachments=None, hidden_copy=False):
-
+    def save_email(self):
         email = EmailLog()
 
-        email.email_from = email_from
-        email.email_to = email_to
-        email.hidden_copy = hidden_copy
+        email.email_from = self._email_from
+        email.email_to = self._email_to
+        email.hidden_copy = self._hidden_copy
 
-        email.subject = subject
-        email.body = content
+        email.subject = self._subject
+        email.body = self._content
 
-        if content_html:
+        if self._content_html:
             email.body_html = True
 
         email.save()
 
-        if attachments is not None:
+        if self._attachments is not None:
 
-            for attachment in attachments:
+            for attachment in self._attachments:
 
                 attachment_log = EmailLogAttachment()
                 attachment_log.email_log = email
@@ -147,21 +141,15 @@ class EmailCenter(object):
             email.has_attachment = True
             email.save()
 
+
+        self._email_log = email
+
         return email
 
     @staticmethod
     def _update_statistic_date(status):
         date = timezone.now().date()
 
-        statistic = EmailStatisticDate.objects.filter(date=date, status=status).first()
-
-        if statistic is not None:
-            statistic.quantity += 1
-
-        else:
-            statistic = EmailStatisticDate()
-            statistic.date = date
-            statistic.status = status
-            statistic.quantity = 1
-
+        statistic = EmailStatisticDate.objects.get_or_create(date=date, status=status)
+        statistic.quantity += 1
         statistic.save()
